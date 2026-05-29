@@ -267,27 +267,23 @@ async def manager_contact(message: Message, state: FSMContext, services: Service
         client_name=name or "", phone=phone or "",
     )
     await state.set_state(ManagerChat.active)
-    await message.answer(
-        "Передал менеджеру — он скоро напишет вам прямо здесь. "
-        "Можете пока коротко описать вопрос. ✍️",
-        reply_markup=get_manager_chat_keyboard(),
-    )
-    await _relay_to_managers(
-        message, services, name,
-        f"открыл чат с менеджером. Имя: {name or '—'}, телефон: {phone or '—'}. "
-        f"Если в сообщении был вопрос: «{text}». Ответьте reply на это сообщение, чтобы написать клиенту.",
+    greeting = f"Здравствуйте{', ' + name if name else ''}! 👋 Я ваш менеджер «Своя Среда», на связи.\n" \
+               "Чем могу помочь — подобрать мебель, рассчитать доставку, ответить на вопрос или оформить заказ?"
+    await message.answer(greeting, reply_markup=get_manager_chat_keyboard())
+    # уведомляем ТОЛЬКО других админов-людей (не самого клиента), чтобы они могли подключиться лично
+    await _notify_other_admins(
+        message,
+        f"💬 Клиент {name or '—'} ({phone or '—'}, #{message.from_user.id}) открыл чат с менеджером. "
+        f"Чтобы ответить лично — сделайте reply на это сообщение.",
     )
 
 
 @router.message(ManagerChat.active)
-async def manager_chat_relay(message: Message, services: Services) -> None:
-    """Сообщения клиента в режиме чата уходят менеджеру (не в ИИ-агента)."""
-    if message.from_user is None:
+async def manager_chat_message(message: Message, services: Services) -> None:
+    """В режиме «Чат с менеджером» отвечает сам ИИ-менеджер (а не пересылает сообщения)."""
+    if message.from_user is None or not message.text:
         return
-    text = message.text or "(вложение/сообщение без текста)"
-    await services.memory.save_user_message(message.from_user.id, text)
-    state = await services.memory.load_state(message.from_user.id)
-    await _relay_to_managers(message, services, state.extracted.client_name, text)
+    await _run_agent_and_reply(message, services)
 
 
 # ---------------- Кнопки меню (reply) ----------------
@@ -357,12 +353,24 @@ async def free_text(message: Message, services: Services) -> None:
 
     # 2) Обычный клиент → ИИ-агент (свободный диалог).
     await repo.upsert_user(user.id, user.username, user.first_name, user.last_name)
+    await _run_agent_and_reply(message, services)
+
+
+# ---------------- helpers ----------------
+
+async def _run_agent_and_reply(message: Message, services: Services) -> None:
+    """Прогоняет сообщение через ИИ-агента и отвечает клиенту.
+
+    Общий путь и для свободного диалога, и для режима «Чат с менеджером»
+    (в обоих случаях отвечает сам бот-менеджер, а не пересылает сообщения человеку)."""
+    user = message.from_user
+    if user is None or not message.text:
+        return
     try:
         await message.bot.send_chat_action(message.chat.id, ChatAction.TYPING)
     except Exception:  # noqa: BLE001
         pass
-
-    logger.info(f"free_text: chat={user.id} text='{message.text[:80]}'")
+    logger.info(f"agent: chat={user.id} text='{message.text[:80]}'")
     try:
         result = await services.agent.handle(user.id, message.text)
     except Exception as exc:  # noqa: BLE001
@@ -372,46 +380,39 @@ async def free_text(message: Message, services: Services) -> None:
             "менеджер сможет вернуться к нему."
         )
         return
-    await message.answer(result.reply)  # главное меню — на постоянной reply-клавиатуре
+    await message.answer(result.reply)
 
     for action in result.actions:
         if action.get("tool") == "create_deal" and (action.get("result") or {}).get("status") == "created":
-            state = await services.memory.load_state(user.id)
+            st = await services.memory.load_state(user.id)
             await _notify_admins(message, services, text=(
                 f"🆕 Сделка #{(action['result']).get('deal_id')} (agent)\n"
-                f"Клиент: {state.extracted.client_name or '—'}, {mask_phone(state.extracted.phone)}\n"
-                f"Товар: {state.extracted.product or '—'} ({state.extracted.color or '—'})\n"
-                f"Город: {state.extracted.city or '—'}, {state.extracted.delivery_type or '—'}"
+                f"Клиент: {st.extracted.client_name or '—'}, {mask_phone(st.extracted.phone)}\n"
+                f"Товар: {st.extracted.product or '—'} ({st.extracted.color or '—'})\n"
+                f"Город: {st.extracted.city or '—'}, {st.extracted.delivery_type or '—'}"
             ))
     if result.manager_required:
-        state = await services.memory.load_state(user.id)
+        st = await services.memory.load_state(user.id)
         await _notify_admins(message, services, text=(
-            f"📞 Нужен менеджер (agent)\nКлиент: {state.extracted.client_name or '—'}, "
-            f"{mask_phone(state.extracted.phone)}"
+            f"📞 Нужен менеджер (agent)\nКлиент: {st.extracted.client_name or '—'}, "
+            f"{mask_phone(st.extracted.phone)}"
         ))
 
 
-# ---------------- helpers ----------------
-
-async def _relay_to_managers(message: Message, services: Services, client_name: Optional[str], text: str) -> None:
-    """Шлёт сообщение клиента всем админам-менеджерам и запоминает связь для ответа."""
+async def _notify_other_admins(message: Message, text: str) -> None:
+    """Уведомляет админов, КРОМЕ самого клиента (чтобы живой менеджер мог подключиться),
+    и запоминает связь сообщение→клиент для ответа через reply."""
     if message.from_user is None:
         return
     client_id = message.from_user.id
-    title = client_name or (message.from_user.first_name or "Клиент")
-    body = f"💬 <b>{title}</b> (#{client_id}):\n{text}"
-    sent_any = False
     for admin_id in get_settings().admin_ids:
+        if admin_id == client_id:
+            continue
         try:
-            sent = await message.bot.send_message(admin_id, body, parse_mode=ParseMode.HTML)
-            _relay[sent.message_id] = {"client_id": client_id, "client_name": client_name}
-            sent_any = True
+            sent = await message.bot.send_message(admin_id, text)
+            _relay[sent.message_id] = {"client_id": client_id, "client_name": None}
         except Exception as exc:  # noqa: BLE001
-            logger.warning(f"relay to admin {admin_id} failed: {exc!r}")
-    await services.crm.create_activity("chat", client_id, "message", "Сообщение в чат менеджеру", text,
-                                       {"client_name": client_name}, created_by="client")
-    if not sent_any:
-        await message.answer("Менеджер сейчас недоступен, но я зафиксировал обращение — с вами свяжутся.")
+            logger.warning(f"notify admin {admin_id} failed: {exc!r}")
 
 
 async def _edit_or_answer(call: CallbackQuery, text: str, reply_markup: Optional[InlineKeyboardMarkup] = None) -> None:
