@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Активности · Svoya CRM{% endblock %}
+{% block content %}
+<h1>Лента активностей</h1>
+<table>
+  <tr><th>Когда</th><th>Сущность</th><th>Тип</th><th>Заголовок</th><th>Содержимое</th><th>Кто</th></tr>
+  {% for a in items %}
+  <tr><td class="muted mono">{{ a.created_at }}</td>
+      <td>{{ a.entity_type }} {{ a.entity_id or '' }}</td>
+      <td><span class="badge">{{ a.type }}</span></td>
+      <td>{{ a.title }}</td><td>{{ (a.content or '')[:80] }}</td><td class="muted">{{ a.created_by }}</td></tr>
+  {% else %}<tr><td colspan="6" class="muted">Пока пусто</td></tr>{% endfor %}
+</table>
+{% endblock %}

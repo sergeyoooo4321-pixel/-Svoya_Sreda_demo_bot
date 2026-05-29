@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Тест-диалоги · Svoya CRM{% endblock %}
+{% block content %}
+<h1>Тестовые диалоги</h1>
+<table>
+  <tr><th>Название</th><th>Сценарий</th><th>Сообщения клиента</th><th>Ожидаемое состояние CRM</th></tr>
+  {% for t in items %}
+  <tr><td>{{ t.title }}</td><td>{{ t.scenario }}</td>
+      <td class="mono">{{ t.client_messages_json }}</td>
+      <td class="mono">{{ t.expected_crm_state_json }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

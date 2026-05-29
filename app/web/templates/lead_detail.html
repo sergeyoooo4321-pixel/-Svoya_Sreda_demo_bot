@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Лид #{{ lead.id }} · Svoya CRM{% endblock %}
+{% block content %}
+<p><a href="/admin/leads">← К канбану</a></p>
+<h1>Лид #{{ lead.id }} · {{ lead.client_name or 'Без имени' }}
+  <span class="badge {{ lead.stage_code }}">{{ stage_names.get(lead.stage_code, lead.stage_code) }}</span></h1>
+<div class="grid" style="grid-template-columns:1fr 1fr; align-items:start">
+  <div class="card">
+    <h3 style="margin-top:0">Карточка</h3>
+    <table>
+      <tr><th>Телефон</th><td>{{ lead.phone or '—' }}</td></tr>
+      <tr><th>Источник</th><td>{{ lead.source }}</td></tr>
+      <tr><th>Товар</th><td>{{ lead.interested_product or '—' }} ({{ lead.product_article or '—' }})</td></tr>
+      <tr><th>Город</th><td>{{ lead.city or '—' }}</td></tr>
+      <tr><th>Доставка</th><td>{{ lead.delivery_type or '—' }}</td></tr>
+      <tr><th>Сборка</th><td>{{ lead.assembly_needed or '—' }}</td></tr>
+      <tr><th>Комм. бота</th><td>{{ lead.bot_comment or '—' }}</td></tr>
+      <tr><th>Комм. менеджера</th><td>{{ lead.manager_comment or '—' }}</td></tr>
+      <tr><th>Создан</th><td class="mono">{{ lead.created_at }}</td></tr>
+    </table>
+    <div class="row" style="margin-top:12px">
+      <form class="inline" method="post" action="/admin/leads/{{ lead.id }}/stage">
+        <select name="stage_code">{% for code,name in stages %}<option value="{{ code }}" {{ 'selected' if code==lead.stage_code }}>{{ name }}</option>{% endfor %}</select>
+        <button class="btn" type="submit">Сменить стадию</button>
+      </form>
+      <form class="inline" method="post" action="/admin/leads/{{ lead.id }}/create-deal">
+        <button class="btn ghost" type="submit">Создать сделку</button>
+      </form>
+    </div>
+    <form method="post" action="/admin/leads/{{ lead.id }}/comment" style="margin-top:12px">
+      <label>Комментарий менеджера</label>
+      <textarea name="text" rows="2" placeholder="Текст комментария"></textarea>
+      <button class="btn" type="submit" style="margin-top:6px">Добавить</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Сообщения чата</h3>
+    {% for m in messages %}<div style="margin-bottom:6px"><b class="muted">{{ m.role }}:</b> {{ m.content[:300] }}</div>
+    {% else %}<div class="muted">Нет сообщений</div>{% endfor %}
+    <h3>Активности</h3>
+    {% for a in activities %}<div style="margin-bottom:4px"><span class="badge">{{ a.type }}</span> {{ a.title }} <span class="muted mono">{{ a.created_at }}</span></div>
+    {% else %}<div class="muted">—</div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

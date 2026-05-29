@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Дашборд · Svoya CRM{% endblock %}
+{% block content %}
+<h1>Дашборд</h1>
+<div class="grid cards">
+  <div class="card stat"><div class="num">{{ counts.leads_total }}</div><div class="lbl">Лидов всего</div></div>
+  <div class="card stat"><div class="num">{{ counts.leads_new }}</div><div class="lbl">Новые</div></div>
+  <div class="card stat"><div class="num">{{ counts.leads_consultation }}</div><div class="lbl">Консультация</div></div>
+  <div class="card stat"><div class="num">{{ counts.leads_waiting }}</div><div class="lbl">Ждут решения</div></div>
+  <div class="card stat"><div class="num">{{ counts.leads_order_created }}</div><div class="lbl">Заказ оформлен</div></div>
+  <div class="card stat"><div class="num">{{ counts.leads_rejected }}</div><div class="lbl">Отказ</div></div>
+  <div class="card stat"><div class="num">{{ counts.deals_total }}</div><div class="lbl">Сделок</div></div>
+</div>
+<h1 style="margin-top:24px">Последние обращения</h1>
+<table>
+  <tr><th>Когда</th><th>Сущность</th><th>Тип</th><th>Заголовок</th></tr>
+  {% for a in recent %}
+  <tr><td class="muted mono">{{ a.created_at }}</td><td>{{ a.entity_type }} {{ a.entity_id or '' }}</td>
+      <td><span class="badge">{{ a.type }}</span></td><td>{{ a.title }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">Пока пусто</td></tr>{% endfor %}
+</table>
+{% endblock %}

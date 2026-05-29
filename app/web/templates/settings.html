@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Настройки · Svoya CRM{% endblock %}
+{% block content %}
+<h1>Настройки</h1>
+<p class="muted">Только чтение. Значения берутся из <span class="mono">.env</span>. Секреты не показываются.</p>
+<table style="max-width:720px">
+  {% for k, v in info.items() %}<tr><th>{{ k }}</th><td class="mono">{{ v }}</td></tr>{% endfor %}
+</table>
+{% endblock %}

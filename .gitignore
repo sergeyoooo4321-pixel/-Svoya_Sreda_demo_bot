@@ -1,0 +1,28 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Local data and logs
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+*.log
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Шаблоны ответов · Svoya CRM{% endblock %}
+{% block content %}
+<h1>Шаблоны ответов бота</h1>
+<table>
+  <tr><th>Intent</th><th>Заголовок</th><th>Ответ</th><th>CRM-действие</th><th>Стадия</th></tr>
+  {% for t in items %}
+  <tr><td class="mono">{{ t.intent }}</td><td>{{ t.title }}</td>
+      <td>{{ t.bot_reply[:120] }}{{ '…' if t.bot_reply and t.bot_reply|length > 120 }}</td>
+      <td>{{ t.expected_crm_action or '—' }}</td><td>{{ t.expected_stage or '—' }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

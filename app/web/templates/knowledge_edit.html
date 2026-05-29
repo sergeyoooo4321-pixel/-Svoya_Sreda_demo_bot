@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ k.title }} · Svoya CRM{% endblock %}
+{% block content %}
+<p><a href="/admin/knowledge">← К базе знаний</a></p>
+<h1>{{ k.title }} <span class="mono muted">{{ k.intent }}</span></h1>
+<form class="card" method="post" action="/admin/knowledge/{{ k.id }}" style="max-width:760px">
+  <label>Ключевые фразы (через запятую)</label><textarea name="keywords" rows="2">{{ k.keywords or '' }}</textarea>
+  <label>Ответ</label><textarea name="answer" rows="4">{{ k.answer or '' }}</textarea>
+  <label>Что уточнить</label><textarea name="clarify" rows="2">{{ k.clarify or '' }}</textarea>
+  <label>Что нельзя обещать</label><textarea name="restrictions" rows="2">{{ k.restrictions or '' }}</textarea>
+  <label>Приоритет</label><input name="priority" value="{{ k.priority }}">
+  <label class="row" style="margin-top:10px"><input type="checkbox" name="active" style="width:auto" {{ 'checked' if k.active }}> Активна</label>
+  <div style="margin-top:12px"><button class="btn" type="submit">Сохранить</button></div>
+</form>
+{% endblock %}

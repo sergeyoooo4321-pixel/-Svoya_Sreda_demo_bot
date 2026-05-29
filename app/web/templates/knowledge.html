@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}База знаний · Svoya CRM{% endblock %}
+{% block content %}
+<h1>База знаний</h1>
+<table>
+  <tr><th>Заголовок</th><th>Intent</th><th>Приоритет</th><th>Активна</th><th></th></tr>
+  {% for k in items %}
+  <tr>
+    <td>{{ k.title }}</td><td class="mono">{{ k.intent }}</td><td>{{ k.priority }}</td>
+    <td>{{ '✅' if k.active else '🚫' }}</td>
+    <td><a class="btn ghost" href="/admin/knowledge/{{ k.id }}/edit">Редактировать</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

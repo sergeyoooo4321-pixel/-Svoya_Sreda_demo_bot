@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Сделки · Svoya CRM{% endblock %}
+{% block content %}
+<h1>Сделки</h1>
+<table>
+  <tr><th>#</th><th>Клиент</th><th>Товар</th><th>Цвет</th><th>Город</th><th>Доставка</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr>
+  {% for d in deals %}
+  <tr>
+    <td><a href="/admin/deals/{{ d.id }}">{{ d.id }}</a></td>
+    <td>{{ d.client_name or '—' }}<div class="muted">{{ d.phone or '' }}</div></td>
+    <td>{{ d.product_name or '—' }}</td><td>{{ d.color or '—' }}</td>
+    <td>{{ d.city or '—' }}</td><td>{{ d.delivery_type or '—' }}</td>
+    <td>{{ d.amount or '—' }}</td><td><span class="badge">{{ d.status }}</span></td>
+    <td class="muted mono">{{ d.created_at }}</td>
+  </tr>
+  {% else %}<tr><td colspan="9" class="muted">Сделок пока нет</td></tr>{% endfor %}
+</table>
+{% endblock %}

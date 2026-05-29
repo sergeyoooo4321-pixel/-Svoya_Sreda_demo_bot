@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ p.name }} · Svoya CRM{% endblock %}
+{% block content %}
+<p><a href="/admin/products">← К товарам</a></p>
+<h1>{{ p.name }} <span class="mono muted">{{ p.article }}</span></h1>
+<form class="card" method="post" action="/admin/products/{{ p.id }}" style="max-width:640px">
+  <label>Цена (число)</label><input name="price" value="{{ p.price }}">
+  <label>Цена (текст)</label><input name="price_text" value="{{ p.price_text or '' }}">
+  <label>Наличие</label><input name="stock" value="{{ p.stock or '' }}">
+  <label>Описание</label><textarea name="description" rows="3">{{ p.description or '' }}</textarea>
+  <label>Рекомендация ИИ-менеджеру</label><textarea name="manager_recommendation" rows="2">{{ p.manager_recommendation or '' }}</textarea>
+  <label class="row" style="margin-top:10px"><input type="checkbox" name="active" style="width:auto" {{ 'checked' if p.active }}> Активен</label>
+  <div style="margin-top:12px"><button class="btn" type="submit">Сохранить</button></div>
+</form>
+{% endblock %}

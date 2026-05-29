@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Лиды · Svoya CRM{% endblock %}
+{% block content %}
+<h1>Лиды — канбан</h1>
+<div class="kanban">
+  {% for code, name in stages %}
+  <div class="col">
+    <h3>{{ name }} · {{ columns[code]|length }}</h3>
+    {% for lead in columns[code] %}
+      <a class="lead" href="/admin/leads/{{ lead.id }}">
+        <b>{{ lead.client_name or 'Без имени' }}</b>
+        <div class="meta">{{ lead.phone or '—' }}</div>
+        <div class="meta">{{ lead.interested_product or '—' }}</div>
+        <div class="meta">{{ lead.city or '' }} · {{ lead.source }}</div>
+        {% if lead.bot_comment %}<div class="meta">💬 {{ lead.bot_comment[:60] }}</div>{% endif %}
+      </a>
+    {% else %}<div class="muted" style="font-size:12px">—</div>{% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

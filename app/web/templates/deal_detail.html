@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Сделка #{{ deal.id }} · Svoya CRM{% endblock %}
+{% block content %}
+<p><a href="/admin/deals">← К сделкам</a></p>
+<h1>Сделка #{{ deal.id }} <span class="badge">{{ deal.status }}</span></h1>
+<div class="card">
+  <table>
+    <tr><th>Клиент</th><td>{{ deal.client_name or '—' }} · {{ deal.phone or '—' }}</td></tr>
+    <tr><th>Лид</th><td>{% if deal.lead_id %}<a href="/admin/leads/{{ deal.lead_id }}">#{{ deal.lead_id }}</a>{% else %}—{% endif %}</td></tr>
+    <tr><th>Товар</th><td>{{ deal.product_name or '—' }} ({{ deal.product_article or '—' }})</td></tr>
+    <tr><th>Цвет</th><td>{{ deal.color or '—' }}</td></tr>
+    <tr><th>Город</th><td>{{ deal.city or '—' }}</td></tr>
+    <tr><th>Доставка</th><td>{{ deal.delivery_type or '—' }}</td></tr>
+    <tr><th>Сборка</th><td>{{ deal.assembly_needed or '—' }}</td></tr>
+    <tr><th>Сумма</th><td>{{ deal.amount or '—' }}</td></tr>
+    <tr><th>Комментарий</th><td>{{ deal.bot_comment or '—' }}</td></tr>
+  </table>
+  <form class="inline" method="post" action="/admin/deals/{{ deal.id }}/status" style="margin-top:12px">
+    <select name="status">{% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s==deal.status }}>{{ s }}</option>{% endfor %}</select>
+    <button class="btn" type="submit">Сменить статус</button>
+  </form>
+</div>
+{% endblock %}

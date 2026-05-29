@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Товары · Svoya CRM{% endblock %}
+{% block content %}
+<h1>Товары</h1>
+<table>
+  <tr><th>Название</th><th>Артикул</th><th>Категория</th><th>Цена</th><th>Наличие</th><th>Активен</th><th></th></tr>
+  {% for p in products %}
+  <tr>
+    <td>{{ p.name }}</td><td class="mono">{{ p.article }}</td><td>{{ p.category }}</td>
+    <td>{{ p.price_text or p.price }}</td><td>{{ p.stock }}</td>
+    <td>{{ '✅' if p.active else '🚫' }}</td>
+    <td><a class="btn ghost" href="/admin/products/{{ p.id }}/edit">Редактировать</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
